@@ -15,7 +15,7 @@
       "type": "Microsoft.Network/virtualNetworks",
       "name": "myVnet",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2016-03-30",
+      "apiVersion": "2016-12-01",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
