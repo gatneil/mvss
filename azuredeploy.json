@@ -92,7 +92,7 @@
         ],
         "backendAddressPools": [
           {
-            "name": "bePool"
+            "name": "myBePool"
           }
         ],
         "backendHttpSettingsCollection": [
@@ -129,7 +129,7 @@
                 "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/httpListeners/appGwHttpListener')]"
               },
               "backendAddressPool": {
-                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendAddressPools/bePool')]"
+                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendAddressPools/myBePool')]"
               },
               "backendHttpSettings": {
                 "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendHttpSettingsCollection/appGwBackendHttpSettings')]"
@@ -185,7 +185,7 @@
                         },
                         "ApplicationGatewayBackendAddressPools": [
                           {
-                            "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendAddressPools/myAppGw')]"
+                            "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendAddressPools/myBePool')]"
                           }
                         ]
                       }
