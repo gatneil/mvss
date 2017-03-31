@@ -26,7 +26,114 @@
           {
             "name": "mySubnet",
             "properties": {
-              "addressPrefix": "10.0.0.0/16"
+              "addressPrefix": "10.0.1.0/24"
+            }
+          },
+          {
+            "name": "myGatewaySubnet",
+            "properties": {
+              "addressPrefix": "10.0.2.0/24"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "myPip",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-12-01",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "type": "Microsoft.Network/applicationGateways",
+      "name": "myAppGw",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-12-01",
+      "dependsOn": [
+        "Microsoft.Network/virtualNetworks/myVnet",
+        "Microsoft.Network/publicIPAddresses/myPip"
+      ],
+      "properties": {
+        "sku": {
+          "name": "Standard_Large",
+          "tier": "Standard",
+          "capacity": "10"
+        },
+        "gatewayIPConfigurations": [
+          {
+            "name": "appGwIpConfig",
+            "properties": {
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/myGatewaySubnet')]"
+              }
+            }
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "appGwFrontendIP",
+            "properties": {
+              "PublicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'myPip')]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "appGwFrontendPort",
+            "properties": {
+              "Port": "80"
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "bePool"
+          }
+        ],
+        "backendHttpSettingsCollection": [
+          {
+            "name": "appGwBackendHttpSettings",
+            "properties": {
+              "Port": "80",
+              "Protocol": "Http",
+              "CookieBasedAffinity": "Disabled"
+            }
+          }
+        ],
+        "httpListeners": [
+          {
+            "name": "appGwHttpListener",
+            "properties": {
+              "FrontendIPConfiguration": {
+                "Id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/frontendIPConfigurations/appGwFrontendIP')]"
+              },
+              "FrontendPort": {
+                "Id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/frontendPorts/appGwFrontendPort')]"
+              },
+              "Protocol": "Http",
+              "SslCertificate": null
+            }
+          }
+        ],
+        "requestRoutingRules": [
+          {
+            "Name": "rule1",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/httpListeners/appGwHttpListener')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendAddressPools/bePool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendHttpSettingsCollection/appGwBackendHttpSettings')]"
+              }
             }
           }
         ]
@@ -38,7 +145,8 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-04-30-preview",
       "dependsOn": [
-        "Microsoft.Network/virtualNetworks/myVnet"
+        "Microsoft.Network/virtualNetworks/myVnet",
+        "Microsoft.Network/applicationGateways/myAppGw"
       ],
       "sku": {
         "name": "Standard_A1",
@@ -74,7 +182,12 @@
                       "properties": {
                         "subnet": {
                           "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
-                        }
+                        },
+                        "ApplicationGatewayBackendAddressPools": [
+                          {
+                            "id": "[concat(resourceId('Microsoft.Network/applicationGateways', 'myAppGw'), '/backendAddressPools/myAppGw')]"
+                          }
+                        ]
                       }
                     }
                   ]
