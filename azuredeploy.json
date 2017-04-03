@@ -1,151 +1,192 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "adminUsername": {
-      "type": "string"
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+	"adminUsername": {
+	    "type": "string"
+	},
+	"adminPassword": {
+	    "type": "securestring"
+	}
     },
-    "adminPassword": {
-      "type": "securestring"
-    }
-  },
-  "variables": {},
-  "resources": [
-    {
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "myVnet",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-12-01",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "10.0.0.0/16"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "mySubnet",
-            "properties": {
-              "addressPrefix": "10.0.0.0/16"
-            }
-          }
-        ]
-      }
+    "variables": {
+	"storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
+	"wadlogs": "<WadCfg><DiagnosticMonitorConfiguration>",
+	"wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+	"wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+	"wadcfgxstart": "[concat(variables('wadlogs'),variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
+	"wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/myScaleSet')]",
+	"wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]"
     },
-    {
-      "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "myScaleSet",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-04-30-preview",
-      "dependsOn": [
-        "Microsoft.Network/virtualNetworks/myVnet"
-      ],
-      "sku": {
-        "name": "Standard_A1",
-        "capacity": 2
-      },
-      "properties": {
-        "upgradePolicy": {
-          "mode": "Manual"
-        },
-        "virtualMachineProfile": {
-          "storageProfile": {
-            "imageReference": {
-              "publisher": "Canonical",
-              "offer": "UbuntuServer",
-              "sku": "16.04-LTS",
-              "version": "latest"
-            }
-          },
-          "osProfile": {
-            "computerNamePrefix": "vm",
-            "adminUsername": "[parameters('adminUsername')]",
-            "adminPassword": "[parameters('adminPassword')]"
-          },
-          "networkProfile": {
-            "networkInterfaceConfigurations": [
-              {
-                "name": "myNic",
-                "properties": {
-                  "primary": "true",
-                  "ipConfigurations": [
-                    {
-                      "name": "myIpConfig",
-                      "properties": {
-                        "subnet": {
-                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Insights/autoscaleSettings",
-      "apiVersion": "2015-04-01",
-      "name": "autoscalehost",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "Microsoft.Compute/virtualMachineScaleSets/myScaleSet"
-      ],
-      "properties": {
-        "name": "autoscalehost",
-        "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-        "enabled": true,
-        "profiles": [
-          {
-            "name": "Profile1",
-            "capacity": {
-              "minimum": "1",
-              "maximum": "10",
-              "default": "1"
-            },
-            "rules": [
-              {
-                "metricTrigger": {
-                  "metricName": "Percentage CPU",
-                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-                  "timeGrain": "PT1M",
-                  "statistic": "Average",
-                  "timeWindow": "PT5M",
-                  "timeAggregation": "Average",
-                  "operator": "GreaterThan",
-                  "threshold": 60
-                },
-                "scaleAction": {
-                  "direction": "Increase",
-                  "type": "ChangeCount",
-                  "value": "1",
-                  "cooldown": "PT1M"
-                }
-              },
-              {
-                "metricTrigger": {
-                  "metricName": "Percentage CPU",
-                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-                  "timeGrain": "PT1M",
-                  "statistic": "Average",
-                  "timeWindow": "PT5M",
-                  "timeAggregation": "Average",
-                  "operator": "LessThan",
-                  "threshold": 30
-                },
-                "scaleAction": {
-                  "direction": "Decrease",
-                  "type": "ChangeCount",
-                  "value": "1",
-                  "cooldown": "PT1M"
-                }
-              }
-            ]
-          }
-        ]
-      }
-    }
-  ]
+    "resources": [
+	{
+	    "type": "Microsoft.Network/virtualNetworks",
+	    "name": "myVnet",
+	    "location": "[resourceGroup().location]",
+	    "apiVersion": "2016-12-01",
+	    "properties": {
+		"addressSpace": {
+		    "addressPrefixes": [
+			"10.0.0.0/16"
+		    ]
+		},
+		"subnets": [
+		    {
+			"name": "mySubnet",
+			"properties": {
+			    "addressPrefix": "10.0.0.0/16"
+			}
+		    }
+		]
+	    }
+	},
+      	{
+	    "type": "Microsoft.Storage/storageAccounts",
+	    "name": "[variables('storageAccountName')]",
+	    "location": "[resourceGroup().location]",
+	    "apiVersion": "2016-12-01",
+	    "properties": {},
+	    "kind": "Storage",
+	    "sku": {
+		"name": "Standard_LRS"
+	    }
+	},
+	{
+	    "type": "Microsoft.Compute/virtualMachineScaleSets",
+	    "name": "myScaleSet",
+	    "location": "[resourceGroup().location]",
+	    "apiVersion": "2016-04-30-preview",
+	    "dependsOn": [
+		"Microsoft.Network/virtualNetworks/myVnet"
+	    ],
+	    "sku": {
+		"name": "Standard_A1",
+		"capacity": 2
+	    },
+	    "properties": {
+		"upgradePolicy": {
+		    "mode": "Manual"
+		},
+		"virtualMachineProfile": {
+		    "storageProfile": {
+			"imageReference": {
+			    "publisher": "Canonical",
+			    "offer": "UbuntuServer",
+			    "sku": "16.04-LTS",
+			    "version": "latest"
+			}
+		    },
+		    "osProfile": {
+			"computerNamePrefix": "vm",
+			"adminUsername": "[parameters('adminUsername')]",
+			"adminPassword": "[parameters('adminPassword')]"
+		    },
+		    "networkProfile": {
+			"networkInterfaceConfigurations": [
+			    {
+				"name": "myNic",
+				"properties": {
+				    "primary": "true",
+				    "ipConfigurations": [
+					{
+					    "name": "myIpConfig",
+					    "properties": {
+						"subnet": {
+						    "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
+						}
+					    }
+					}
+				    ]
+				}
+			    }
+			]
+		    },
+		    "extensionProfile": {
+			"extensions": [
+			    {
+				"name": "LinuxDiagnostic",
+				"properties": {
+				    "publisher": "Microsoft.OSTCExtensions",
+				    "type": "LinuxDiagnostic",
+				    "typeHandlerVersion": "2.3",
+				    "autoUpgradeMinorVersion": true,
+				    "settings": {
+					"xmlCfg": "[base64(concat(variables('wadcfgxstart'), variables('wadmetricsresourceid'), variables('wadcfgxend')))]",
+					"storageAccount": "[variables('storageAccountName')]"
+				    },
+				    "protectedSettings": {
+					"storageAccountName": "[variables('storageAccountName')]",
+					"storageAccountKey": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2016-12-01').keys[0].value]",
+					"storageAccountEndPoint": "https://core.windows.net"
+				    }
+				}
+			    }
+			]
+		    }
+		}
+	    }
+	},
+	{
+	    "type": "Microsoft.Insights/autoscaleSettings",
+	    "apiVersion": "2015-04-01",
+	    "name": "autoscalehost",
+	    "location": "[resourceGroup().location]",
+	    "dependsOn": [
+		"Microsoft.Compute/virtualMachineScaleSets/myScaleSet"
+	    ],
+	    "properties": {
+		"name": "autoscalehost",
+		"targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
+		"enabled": true,
+		"profiles": [
+		    {
+			"name": "Profile1",
+			"capacity": {
+			    "minimum": "1",
+			    "maximum": "10",
+			    "default": "1"
+			},
+			"rules": [
+			    {
+				"metricTrigger": {
+				    "metricName": "\\Processor\\PercentProcessorTime",
+				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
+				    "timeGrain": "PT1M",
+				    "statistic": "Average",
+				    "timeWindow": "PT5M",
+				    "timeAggregation": "Average",
+				    "operator": "GreaterThan",
+				    "threshold": 60
+				},
+				"scaleAction": {
+				    "direction": "Increase",
+				    "type": "ChangeCount",
+				    "value": "1",
+				    "cooldown": "PT1M"
+				}
+			    },
+			    {
+				"metricTrigger": {
+				    "metricName": "\\Processor\\PercentProcessorTime",
+				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
+				    "timeGrain": "PT1M",
+				    "statistic": "Average",
+				    "timeWindow": "PT5M",
+				    "timeAggregation": "Average",
+				    "operator": "LessThan",
+				    "threshold": 30
+				},
+				"scaleAction": {
+				    "direction": "Decrease",
+				    "type": "ChangeCount",
+				    "value": "1",
+				    "cooldown": "PT1M"
+				}
+			    }
+			]
+		    }
+		]
+	    }
+	}
+    ]
 }
