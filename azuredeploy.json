@@ -11,8 +11,8 @@
     },
     "variables": {
 	"storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
-	"wadcfgxstart": "<WadCfg><DiagnosticMonitorConfiguration><PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters><Metrics resourceId=\"",
-	"wadcfgxend": "\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>"
+	"wadcfgxstart": "",
+	"wadcfgxend": ""
     },
     "resources": [
 	{
@@ -108,7 +108,7 @@
 				    "typeHandlerVersion": "2.3",
 				    "autoUpgradeMinorVersion": true,
 				    "settings": {
-					"xmlCfg": "[base64(concat(variables('wadcfgxstart'), resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet'), variables('wadcfgxend')))]",
+					"xmlCfg": "[base64(concat('<WadCfg><DiagnosticMonitorConfiguration><PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters><Metrics resourceId=\"', resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet'), '\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>'))]",
 					"storageAccount": "[variables('storageAccountName')]"
 				    },
 				    "protectedSettings": {
