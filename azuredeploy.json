@@ -10,9 +10,7 @@
 	}
     },
     "variables": {
-	"storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
-	"wadcfgxstart": "",
-	"wadcfgxend": ""
+	"storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]"
     },
     "resources": [
 	{
