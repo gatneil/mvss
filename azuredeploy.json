@@ -110,7 +110,6 @@
 					"storageAccount": "[variables('storageAccountName')]"
 				    },
 				    "protectedSettings": {
-					"storageAccountName": "[variables('storageAccountName')]",
 					"storageAccountKey": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2016-12-01').keys[0].value]",
 					"storageAccountEndPoint": "https://core.windows.net"
 				    }
