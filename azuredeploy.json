@@ -7,9 +7,14 @@
     },
     "adminPassword": {
       "type": "securestring"
+    },
+    "uniqueDnsPrefix": {
+      "type": "string"
     }
   },
-  "variables": {},
+  "variables": {
+    "scaleSetCount": 2
+  },
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
@@ -33,16 +38,77 @@
       }
     },
     {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat('myPip', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-12-01",
+      "copy": {
+        "name": "pipLoop",
+        "count": "[variables('scaleSetCount')]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[concat(parameters('uniqueDnsPrefix'), copyIndex())]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[concat('myLb', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-12-01",
+      "copy": {
+        "name": "lbLoop",
+        "count": "[variables('scaleSetCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/myPip', copyIndex())]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerFrontEnd",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat('myPip', copyIndex()))]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[concat('myBePool', copyIndex())]"
+          }
+        ],
+        "inboundNatPools": [
+          {
+            "name": "[concat('myNatPool', copyIndex())]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('myLb', copyIndex())), '/frontendIPConfigurations/loadBalancerFrontEnd')]"
+              },
+              "protocol": "tcp",
+              "frontendPortRangeStart": "50000",
+              "frontendPortRangeEnd": "50119",
+              "backendPort": "22"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[concat('myScaleSet', copyindex())]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-04-30-preview",
       "copy": {
         "name": "scaleSetLoop",
-        "count": 2
+        "count": "[variables('scaleSetCount')]"
       },
       "dependsOn": [
-        "Microsoft.Network/virtualNetworks/myVnet"
+        "Microsoft.Network/virtualNetworks/myVnet",
+        "[concat('Microsoft.Network/loadBalancers/myLb', copyIndex())]"
       ],
       "sku": {
         "name": "Standard_A1",
@@ -78,7 +144,17 @@
                       "properties": {
                         "subnet": {
                           "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
-                        }
+                        },
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('myLb', copyIndex())), '/backendAddressPools/', concat('myBePool', copyIndex()))]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('myLb', copyIndex())), '/inboundNatPools/', concat('myNatPool', copyIndex()))]"
+                          }
+                        ]
                       }
                     }
                   ]
