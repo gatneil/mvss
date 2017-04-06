@@ -94,6 +94,38 @@
               "backendPort": "22"
             }
           }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "LBRule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('myLb', copyIndex())), '/frontendIPConfigurations/loadBalancerFrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('myLb', copyIndex())), '/backendAddressPools/', concat('myBePool', copyIndex()))]"
+              },
+              "protocol": "tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('myLb', copyIndex())), '/probes/tcpProbe')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "tcpProbe",
+            "properties": {
+              "protocol": "tcp",
+              "port": 80,
+              "intervalInSeconds": "5",
+              "numberOfProbes": "2"
+            }
+          }
         ]
       }
     },
@@ -128,7 +160,7 @@
             }
           },
           "osProfile": {
-            "computerNamePrefix": "vm",
+            "computerNamePrefix": "[concat('ss', copyIndex(), 'vm')]",
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]"
           },
@@ -161,8 +193,70 @@
                 }
               }
             ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "apacheextension",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Extensions",
+                  "type": "CustomScript",
+                  "typeHandlerVersion": "2.0",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "fileUris": [
+                      "https://raw.githubusercontent.com/gatneil/scripts/master/apacheUniqueHost.sh"
+                    ],
+                    "commandToExecute": "bash apacheUniqueHost.sh"
+                  }
+                }
+              }
+            ]
           }
         }
+      }
+    },
+    {
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles",
+      "name": "VMSSEndpointExample",
+      "location": "global",
+      "dependsOn": [
+        "Microsoft.Network/publicIPAddresses/myPip0",
+        "Microsoft.Network/publicIPAddresses/myPip1"
+      ],
+      "properties": {
+        "profileStatus": "Enabled",
+        "trafficRoutingMethod": "Weighted",
+        "dnsConfig": {
+          "relativeName": "[parameters('uniqueDnsPrefix')]",
+          "ttl": 30
+        },
+        "monitorConfig": {
+          "protocol": "http",
+          "port": 80,
+          "path": "/"
+        },
+        "endpoints": [
+          {
+            "name": "endpoint0",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "properties": {
+              "targetResourceId": "[resourceId('Microsoft.Network/publicIPAddresses', 'myPip0')]",
+              "endpointStatus": "Enabled",
+              "weight": 1
+            }
+          },
+          {
+            "name": "endpoint1",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "properties": {
+              "targetResourceId": "[resourceId('Microsoft.Network/publicIPAddresses', 'myPip1')]",
+              "endpointStatus": "Enabled",
+              "weight": 1
+            }
+          }
+        ]
       }
     }
   ]
