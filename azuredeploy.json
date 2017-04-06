@@ -34,9 +34,13 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "myScaleSet",
+      "name": "[concat('myScaleSet', copyindex())]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-04-30-preview",
+      "copy": {
+        "name": "scaleSetLoop",
+        "count": 2
+      },
       "dependsOn": [
         "Microsoft.Network/virtualNetworks/myVnet"
       ],
