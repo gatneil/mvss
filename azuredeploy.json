@@ -60,7 +60,7 @@
         "sku": {
           "name": "Standard_Large",
           "tier": "Standard",
-          "capacity": "10"
+          "capacity": "2"
         },
         "gatewayIPConfigurations": [
           {
