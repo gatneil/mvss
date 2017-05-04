@@ -83,7 +83,6 @@
 		    {
 			"name": "httpRule",
 			"properties": {
-			    "loadDistribution": "Default",
 			    "frontendIPConfiguration": {
 				"id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/frontendIPConfigurations/lbFrontEnd')]"
 			    },
