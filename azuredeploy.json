@@ -34,7 +34,7 @@
 	},
 	{
 	    "type": "Microsoft.Network/publicIPAddresses",
-	    "name": "myPip",
+	    "name": "lbPip",
 	    "location": "[resourceGroup().location]",
 	    "apiVersion": "2017-04-01",
 	    "properties": {
@@ -47,7 +47,7 @@
 	    "location": "[resourceGroup().location]",
 	    "apiVersion": "2017-04-01",
 	    "dependsOn": [
-		"Microsoft.Network/publicIPAddresses/myPip"
+		"Microsoft.Network/publicIPAddresses/lbPip"
 	    ],
 	    "properties": {
 		"frontendIPConfigurations": [
@@ -55,7 +55,7 @@
 			"name": "lbFrontEnd",
 			"properties": {
 			    "publicIPAddress": {
-				"id": "[resourceId('Microsoft.Network/publicIPAddresses', 'myPip')]"
+				"id": "[resourceId('Microsoft.Network/publicIPAddresses', 'lbPip')]"
 			    }
 			}
 		    }
