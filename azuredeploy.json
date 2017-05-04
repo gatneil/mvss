@@ -1,89 +1,148 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "adminUsername": {
-      "type": "string"
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+	"adminUsername": {
+	    "type": "string"
+	},
+	"adminPassword": {
+	    "type": "securestring"
+	}
     },
-    "adminPassword": {
-      "type": "securestring"
-    }
-  },
-  "variables": {},
-  "resources": [
-    {
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "myVnet",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-12-01",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "10.0.0.0/16"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "mySubnet",
-            "properties": {
-              "addressPrefix": "10.0.0.0/16"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "myScaleSet",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-04-30-preview",
-      "dependsOn": [
-        "Microsoft.Network/virtualNetworks/myVnet"
-      ],
-      "sku": {
-        "name": "Standard_A1",
-        "capacity": 2
-      },
-      "properties": {
-        "upgradePolicy": {
-          "mode": "Manual"
-        },
-        "virtualMachineProfile": {
-          "storageProfile": {
-            "imageReference": {
-              "publisher": "Canonical",
-              "offer": "UbuntuServer",
-              "sku": "16.04-LTS",
-              "version": "latest"
-            }
-          },
-          "osProfile": {
-            "computerNamePrefix": "vm",
-            "adminUsername": "[parameters('adminUsername')]",
-            "adminPassword": "[parameters('adminPassword')]"
-          },
-          "networkProfile": {
-            "networkInterfaceConfigurations": [
-              {
-                "name": "myNic",
-                "properties": {
-                  "primary": "true",
-                  "ipConfigurations": [
-                    {
-                      "name": "myIpConfig",
-                      "properties": {
-                        "subnet": {
-                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      }
-    }
-  ]
+    "variables": {},
+    "resources": [
+	{
+	    "type": "Microsoft.Network/virtualNetworks",
+	    "name": "myVnet",
+	    "location": "[resourceGroup().location]",
+	    "apiVersion": "2016-12-01",
+	    "properties": {
+		"addressSpace": {
+		    "addressPrefixes": [
+			"10.0.0.0/16"
+		    ]
+		},
+		"subnets": [
+		    {
+			"name": "mySubnet",
+			"properties": {
+			    "addressPrefix": "10.0.0.0/16"
+			}
+		    }
+		]
+	    }
+	},
+	{
+	    "type": "Microsoft.Network/publicIPAddresses",
+	    "name": "myPip",
+	    "location": "[resourceGroup().location]",
+	    "apiVersion": "2017-04-01",
+	    "properties": {
+		"publicIPAllocationMethod": "Dynamic"
+	    }
+	},
+        {
+	    "type": "Microsoft.Network/loadBalancers",
+	    "name": "myLb",
+	    "location": "[resourceGroup().location]",
+	    "apiVersion": "2017-04-01",
+	    "dependsOn": [
+		"Microsoft.Network/publicIPAddresses/myPip"
+	    ],
+	    "properties": {
+		"frontendIPConfigurations": [
+		    {
+			"name": "lbFrontEnd",
+			"properties": {
+			    "publicIPAddress": {
+				"id": "[resourceId('Microsoft.Network/publicIPAddresses', 'myPip')]"
+			    }
+			}
+		    }
+		],
+		"backendAddressPools": [
+		    {
+			"name": "lbBackendPool"
+		    }
+		],
+		"inboundNatPools": [
+		    {
+			"name": "lbNatPool",
+			"properties": {
+			    "frontendIPConfiguration": {
+				"id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/frontendIPConfigurations/lbFrontEnd')]"
+			    },
+			    "protocol": "tcp",
+			    "frontendPortRangeStart": 50000,
+			    "frontendPortRangeEnd": 50119,
+			    "backendPort": 22
+			}
+		    }
+		]
+	    }
+	},
+	{
+	    "type": "Microsoft.Compute/virtualMachineScaleSets",
+	    "name": "myScaleSet",
+	    "location": "[resourceGroup().location]",
+	    "apiVersion": "2016-04-30-preview",
+	    "dependsOn": [
+		"Microsoft.Network/virtualNetworks/myVnet"
+	    ],
+	    "sku": {
+		"name": "Standard_A1",
+		"capacity": 2
+	    },
+	    "properties": {
+		"upgradePolicy": {
+		    "mode": "Manual"
+		},
+		"virtualMachineProfile": {
+		    "storageProfile": {
+			"imageReference": {
+			    "publisher": "Canonical",
+			    "offer": "UbuntuServer",
+			    "sku": "16.04-LTS",
+			    "version": "latest"
+			}
+		    },
+		    "osProfile": {
+			"computerNamePrefix": "vm",
+			"adminUsername": "[parameters('adminUsername')]",
+			"adminPassword": "[parameters('adminPassword')]"
+		    },
+		    "networkProfile": {
+			"networkInterfaceConfigurations": [
+			    {
+				"name": "myNic",
+				"properties": {
+				    "primary": "true",
+				    "ipConfigurations": [
+					{
+					    "name": "myIpConfig",
+					    "properties": {
+						"subnet": {
+						    "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
+						},
+						"loadBalancerBackendAddressPools": [
+						    {
+							"id": "[concat(resourceId('Microsoft.Network/loadBalancers/', 'myLb'), '/backendAddressPools/lbBackendPool')]"
+						    }
+						],
+						"loadBalancerInboundNatPools": [
+						    {
+							"id": "[concat(resourceId('Microsoft.Network/loadBalancers/', 'myLb'), '/inboundNatPools/lbNatPool')]"
+						    }
+						]
+					    }
+					}
+				    ]
+				}
+			    }
+			]
+		    }
+		}
+	    }
+	}
+    ]
 }
