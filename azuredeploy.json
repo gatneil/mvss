@@ -78,6 +78,39 @@
 			    "backendPort": 22
 			}
 		    }
+		],
+		"loadBalancingRules": [
+		    {
+			"name": "httpRule",
+			"properties": {
+			    "loadDistribution": "Default",
+			    "frontendIPConfiguration": {
+				"id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/frontendIPConfigurations/lbFrontEnd')]"
+			    },
+			    "backendAddressPool": {
+				"id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/backendAddressPools/lbBackendPool')]"
+			    },
+			    "protocol": "Tcp",
+			    "frontendPort": 80,
+			    "backendPort": 80,
+			    "enableFloatingIP": false,
+			    "idleTimeoutInMinutes": 5,
+			    "probe": {
+				"id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/probes/httpProbe')]"
+			    }
+			}
+		    }
+		],
+		"probes": [
+		    {
+			"name": "httpProbe",
+			"properties": {
+			    "protocol": "Tcp",
+			    "port": 80,
+			    "intervalInSeconds": 5,
+			    "numberOfProbes": 2
+			}
+		    }
 		]
 	    }
 	},
@@ -87,6 +120,7 @@
 	    "location": "[resourceGroup().location]",
 	    "apiVersion": "2016-04-30-preview",
 	    "dependsOn": [
+		"Microsoft.Network/loadBalancers/myLb",
 		"Microsoft.Network/virtualNetworks/myVnet"
 	    ],
 	    "sku": {
