@@ -92,7 +92,6 @@
 			    "protocol": "Tcp",
 			    "frontendPort": 80,
 			    "backendPort": 80,
-			    "enableFloatingIP": false,
 			    "idleTimeoutInMinutes": 5,
 			    "probe": {
 				"id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/probes/httpProbe')]"
