@@ -103,9 +103,7 @@
 			"name": "httpProbe",
 			"properties": {
 			    "protocol": "Tcp",
-			    "port": 80,
-			    "intervalInSeconds": 5,
-			    "numberOfProbes": 2
+			    "port": 80
 			}
 		    }
 		]
