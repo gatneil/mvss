@@ -171,29 +171,27 @@
 					]
 				    },
 				    "protectedSettings": {
-					{
-					    "storageAccountName": "[parameters('storageAccountName')]",
-					    "storageAccountSasToken": "[parameters('storageAccountSasToken')]",
-					    "sinksConfig": {
-						"sink": [
-						    {
-							"name": "SyslogJsonBlob",
-							"type": "JsonBlob"
-						    },
-						    {
-							"name": "FilelogJsonBlob",
-							"type": "JsonBlob"
-						    },
-						    {
-							"name": "LinuxCpuJsonBlob",
-							"type": "JsonBlob"
-						    },
-						    {
-							"name": "WADMetricJsonBlob",
-							"type": "JsonBlob"
-						    }
-						]
-					    }
+					"storageAccountName": "[parameters('storageAccountName')]",
+					"storageAccountSasToken": "[parameters('storageAccountSasToken')]",
+					"sinksConfig": {
+					    "sink": [
+						{
+						    "name": "SyslogJsonBlob",
+						    "type": "JsonBlob"
+						},
+						{
+						    "name": "FilelogJsonBlob",
+						    "type": "JsonBlob"
+						},
+						{
+						    "name": "LinuxCpuJsonBlob",
+						    "type": "JsonBlob"
+						},
+						{
+						    "name": "WADMetricJsonBlob",
+						    "type": "JsonBlob"
+						}
+					    ]
 					}
 				    }
 				}
