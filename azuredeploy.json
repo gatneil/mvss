@@ -8,13 +8,12 @@
 	"adminPassword": {
 	    "type": "securestring"
 	},
-	"storageAccountName" {
+	"storageAccountName": {
 	    "type": "string"
 	},
 	"storageAccountSasToken" {
 	    "type": "securestring"
 	}
-	
     },
     "resources": [
 	{
