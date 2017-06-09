@@ -7,10 +7,14 @@
 	},
 	"adminPassword": {
 	    "type": "securestring"
+	},
+	"storageAccountName" {
+	    "type": "string"
+	},
+	"storageAccountSasToken" {
+	    "type": "securestring"
 	}
-    },
-    "variables": {
-	"storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]"
+	
     },
     "resources": [
 	{
@@ -34,25 +38,13 @@
 		]
 	    }
 	},
-      	{
-	    "type": "Microsoft.Storage/storageAccounts",
-	    "name": "[variables('storageAccountName')]",
-	    "location": "[resourceGroup().location]",
-	    "apiVersion": "2016-12-01",
-	    "properties": {},
-	    "kind": "Storage",
-	    "sku": {
-		"name": "Standard_LRS"
-	    }
-	},
 	{
 	    "type": "Microsoft.Compute/virtualMachineScaleSets",
 	    "name": "myScaleSet",
 	    "location": "[resourceGroup().location]",
 	    "apiVersion": "2016-04-30-preview",
 	    "dependsOn": [
-		"Microsoft.Network/virtualNetworks/myVnet",
-		"[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+		"Microsoft.Network/virtualNetworks/myVnet"
 	    ],
 	    "sku": {
 		"name": "Standard_A1",
@@ -106,82 +98,112 @@
 				    "typeHandlerVersion": "3.0",
 				    "autoUpgradeMinorVersion": true,
 				    "settings": {
-					"xmlCfg": "[base64(concat('<WadCfg><DiagnosticMonitorConfiguration><PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters><Metrics resourceId=\"', resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet'), '\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>'))]",
-					"storageAccount": "[variables('storageAccountName')]"
+					{
+					    "StorageAccount": "[parameters('storageAccountName')]",
+					    "sampleRateInSeconds": 15,
+					    "ladCfg": {
+						"diagnosticMonitorConfiguration": {
+						    "performanceCounters": {
+							"sinks": "WADMetricEventHub,WADMetricJsonBlob",
+							"performanceCounterConfiguration": [
+							    {
+								"unit": "Percent",
+								"type": "builtin",
+								"counter": "PercentProcessorTime",
+								"counterSpecifier": "/builtin/Processor/PercentProcessorTime",
+								"annotation": [
+								    {
+									"locale": "en-us",
+									"displayName": "Aggregate CPU %utilization"
+								    }
+								],
+								"condition": "IsAggregate=TRUE",
+								"class": "Processor"
+							    },
+							    {
+								"unit": "Bytes",
+								"type": "builtin",
+								"counter": "UsedSpace",
+								"counterSpecifier": "/builtin/FileSystem/UsedSpace",
+								"annotation": [
+								    {
+									"locale": "en-us",
+									"displayName": "Used disk space on /"
+								    }
+								],
+								"condition": "Name=\"/\"",
+								"class": "Filesystem"
+							    }
+							]
+						    },
+						    "metrics": {
+							"metricAggregation": [
+							    {
+								"scheduledTransferPeriod": "PT1H"
+							    },
+							    {
+								"scheduledTransferPeriod": "PT1M"
+							    }
+							],
+							"resourceId": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]"
+						    },
+						    "eventVolume": "Large",
+						    "syslogEvents": {
+							"sinks": "SyslogJsonBlob,LoggingEventHub",
+							"syslogEventConfiguration": {
+							    "LOG_USER": "LOG_INFO"
+							}
+						    }
+						}
+					    },
+					    "perfCfg": [
+						{
+						    "query": "SELECT PercentProcessorTime, PercentIdleTime FROM SCX_ProcessorStatisticalInformation WHERE Name='_TOTAL'",
+						    "table": "LinuxCpu",
+						    "frequency": 60,
+						    "sinks": "LinuxCpuJsonBlob,LinuxCpuEventHub"
+						}
+					    ],
+					    "fileLogs": [
+						{
+						    "file": "/var/log/myladtestlog",
+						    "table": "MyLadTestLog",
+						    "sinks": "FilelogJsonBlob,LoggingEventHub"
+						}
+					    ]
+					}
 				    },
 				    "protectedSettings": {
-					"storageAccountName": "[variables('storageAccountName')]",
-					"storageAccountKey": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2016-12-01').keys[0].value]"
+					{
+					    "storageAccountName": "[parameters('storageAccountName')]",
+					    "storageAccountSasToken": "[parameters('storageAccountSasToken')]",
+					    "sinksConfig": {
+						"sink": [
+						    {
+							"name": "SyslogJsonBlob",
+							"type": "JsonBlob"
+						    },
+						    {
+							"name": "FilelogJsonBlob",
+							"type": "JsonBlob"
+						    },
+						    {
+							"name": "LinuxCpuJsonBlob",
+							"type": "JsonBlob"
+						    },
+						    {
+							"name": "WADMetricJsonBlob",
+							"type": "JsonBlob"
+						    }
+						]
+					    }
+					}
 				    }
 				}
 			    }
 			]
 		    }
 		}
-	    }
-	},
-	{
-	    "type": "Microsoft.Insights/autoscaleSettings",
-	    "apiVersion": "2015-04-01",
-	    "name": "autoscalehost",
-	    "location": "[resourceGroup().location]",
-	    "dependsOn": [
-		"Microsoft.Compute/virtualMachineScaleSets/myScaleSet"
-	    ],
-	    "properties": {
-		"name": "autoscalehost",
-		"targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-		"enabled": true,
-		"profiles": [
-		    {
-			"name": "Profile1",
-			"capacity": {
-			    "minimum": "1",
-			    "maximum": "10",
-			    "default": "1"
-			},
-			"rules": [
-			    {
-				"metricTrigger": {
-				    "metricName": "\\Processor\\PercentProcessorTime",
-				    "metricNamespace": "",
-				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-				    "timeGrain": "PT1M",
-				    "statistic": "Average",
-				    "timeWindow": "PT5M",
-				    "timeAggregation": "Average",
-				    "operator": "GreaterThan",
-				    "threshold": 60
-				},
-				"scaleAction": {
-				    "direction": "Increase",
-				    "type": "ChangeCount",
-				    "value": "1",
-				    "cooldown": "PT1M"
-				}
-			    },
-			    {
-				"metricTrigger": {
-				    "metricName": "\\Processor\\PercentProcessorTime",
-				    "metricNamespace": "",
-				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-				    "timeGrain": "PT1M",
-				    "statistic": "Average",
-				    "timeWindow": "PT5M",
-				    "timeAggregation": "Average",
-				    "operator": "LessThan",
-				    "threshold": 30
-				},
-				"scaleAction": {
-				    "direction": "Decrease",
-				    "type": "ChangeCount",
-				    "value": "1",
-				    "cooldown": "PT1M"
-				}
-			    }
-			]
-		    }
-		]
 	    }
 	}
     ]
