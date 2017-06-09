@@ -99,11 +99,11 @@
 		    "extensionProfile": {
 			"extensions": [
 			    {
-				"name": "LinuxDiagnostic",
+				"name": "LinuxDiagnosticExtension",
 				"properties": {
-				    "publisher": "Microsoft.OSTCExtensions",
+				    "publisher": "Microsoft.Azure.Diagnostics",
 				    "type": "LinuxDiagnostic",
-				    "typeHandlerVersion": "2.3",
+				    "typeHandlerVersion": "3.0",
 				    "autoUpgradeMinorVersion": true,
 				    "settings": {
 					"xmlCfg": "[base64(concat('<WadCfg><DiagnosticMonitorConfiguration><PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters><Metrics resourceId=\"', resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet'), '\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>'))]",
