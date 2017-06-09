@@ -102,7 +102,7 @@
 					"ladCfg": {
 					    "diagnosticMonitorConfiguration": {
 						"performanceCounters": {
-						    "sinks": "WADMetricEventHub,WADMetricJsonBlob",
+						    "sinks": "WADMetricJsonBlob",
 						    "performanceCounterConfiguration": [
 							{
 							    "unit": "Percent",
@@ -147,7 +147,7 @@
 						},
 						"eventVolume": "Large",
 						"syslogEvents": {
-						    "sinks": "SyslogJsonBlob,LoggingEventHub",
+						    "sinks": "SyslogJsonBlob",
 						    "syslogEventConfiguration": {
 							"LOG_USER": "LOG_INFO"
 						    }
@@ -159,14 +159,14 @@
 						"query": "SELECT PercentProcessorTime, PercentIdleTime FROM SCX_ProcessorStatisticalInformation WHERE Name='_TOTAL'",
 						"table": "LinuxCpu",
 						"frequency": 60,
-						"sinks": "LinuxCpuJsonBlob,LinuxCpuEventHub"
+						"sinks": "LinuxCpuJsonBlob"
 					    }
 					],
 					"fileLogs": [
 					    {
 						"file": "/var/log/myladtestlog",
 						"table": "MyLadTestLog",
-						"sinks": "FilelogJsonBlob,LoggingEventHub"
+						"sinks": "FilelogJsonBlob"
 					    }
 					]
 				    },
