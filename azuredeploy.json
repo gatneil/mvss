@@ -156,7 +156,7 @@
 					},
 					"perfCfg": [
 					    {
-						"query": "SELECT PercentProcessorTime, PercentIdleTime FROM SCX_ProcessorStatisticalInformation WHERE Name='_TOTAL'",
+						"query": "SELECT PercentProcessorTime FROM SCX_ProcessorStatisticalInformation WHERE Name='_TOTAL'",
 						"table": "LinuxCpu",
 						"frequency": 60,
 						"sinks": "LinuxCpuJsonBlob"
@@ -210,7 +210,7 @@
 		"Microsoft.Compute/virtualMachineScaleSets/myScaleSet"
 	    ],
 	    "properties": {
-		"name": "guestMetricAutoscale",
+		"name": "guestMetricsAutoscale",
 		"targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
 		"enabled": true,
 		"profiles": [
@@ -224,7 +224,7 @@
 			"rules": [
 			    {
 				"metricTrigger": {
-				    "metricName": "\\Processor\\PercentProcessorTime",
+				    "metricName": "/builtin/Processor/PercentProcessorTime",
 				    "metricNamespace": "",
 				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
 				    "timeGrain": "PT1M",
@@ -243,7 +243,7 @@
 			    },
 			    {
 				"metricTrigger": {
-				    "metricName": "\\Processor\\PercentProcessorTime",
+				    "metricName": "/builtin/Processor/PercentProcessorTime",
 				    "metricNamespace": "",
 				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
 				    "timeGrain": "PT1M",
