@@ -11,7 +11,7 @@
 	"storageAccountName": {
 	    "type": "string"
 	},
-	"storageAccountSasToken" {
+	"storageAccountSasToken": {
 	    "type": "securestring"
 	}
     },
