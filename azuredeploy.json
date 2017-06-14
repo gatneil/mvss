@@ -147,13 +147,6 @@
 						"frequency": 60,
 						"sinks": "LinuxCpuJsonBlob"
 					    }
-					],
-					"fileLogs": [
-					    {
-						"file": "/var/log/myladtestlog",
-						"table": "MyLadTestLog",
-						"sinks": "FilelogJsonBlob"
-					    }
 					]
 				    },
 				    "protectedSettings": {
@@ -163,10 +156,6 @@
 					    "sink": [
 						{
 						    "name": "SyslogJsonBlob",
-						    "type": "JsonBlob"
-						},
-						{
-						    "name": "FilelogJsonBlob",
 						    "type": "JsonBlob"
 						},
 						{
