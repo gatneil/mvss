@@ -117,20 +117,6 @@
 							    ],
 							    "condition": "IsAggregate=TRUE",
 							    "class": "Processor"
-							},
-							{
-							    "unit": "Bytes",
-							    "type": "builtin",
-							    "counter": "UsedSpace",
-							    "counterSpecifier": "/builtin/FileSystem/UsedSpace",
-							    "annotation": [
-								{
-								    "locale": "en-us",
-								    "displayName": "Used disk space on /"
-								}
-							    ],
-							    "condition": "Name=\"/\"",
-							    "class": "Filesystem"
 							}
 						    ]
 						},
