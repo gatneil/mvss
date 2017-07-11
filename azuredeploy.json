@@ -131,13 +131,7 @@
 						    ],
 						    "resourceId": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]"
 						},
-						"eventVolume": "Large",
-						"syslogEvents": {
-						    "sinks": "SyslogJsonBlob",
-						    "syslogEventConfiguration": {
-							"LOG_USER": "LOG_INFO"
-						    }
-						}
+						"eventVolume": "Large"
 					    }
 					},
 					"perfCfg": [
@@ -154,10 +148,6 @@
 					"storageAccountSasToken": "[parameters('storageAccountSasToken')]",
 					"sinksConfig": {
 					    "sink": [
-						{
-						    "name": "SyslogJsonBlob",
-						    "type": "JsonBlob"
-						},
 						{
 						    "name": "LinuxCpuJsonBlob",
 						    "type": "JsonBlob"
