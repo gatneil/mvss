@@ -107,12 +107,6 @@
 							    "type": "builtin",
 							    "counter": "PercentProcessorTime",
 							    "counterSpecifier": "/builtin/Processor/PercentProcessorTime",
-							    "annotation": [
-								{
-								    "locale": "en-us",
-								    "displayName": "Aggregate CPU %utilization"
-								}
-							    ],
 							    "condition": "IsAggregate=TRUE",
 							    "class": "Processor"
 							}
