@@ -133,25 +133,13 @@
 						},
 						"eventVolume": "Large"
 					    }
-					},
-					"perfCfg": [
-					    {
-						"query": "SELECT PercentProcessorTime FROM SCX_ProcessorStatisticalInformation WHERE Name='_TOTAL'",
-						"table": "LinuxCpu",
-						"frequency": 60,
-						"sinks": "LinuxCpuJsonBlob"
-					    }
-					]
+					}
 				    },
 				    "protectedSettings": {
 					"storageAccountName": "[parameters('storageAccountName')]",
 					"storageAccountSasToken": "[parameters('storageAccountSasToken')]",
 					"sinksConfig": {
 					    "sink": [
-						{
-						    "name": "LinuxCpuJsonBlob",
-						    "type": "JsonBlob"
-						},
 						{
 						    "name": "WADMetricJsonBlob",
 						    "type": "JsonBlob"
