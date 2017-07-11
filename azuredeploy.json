@@ -1,210 +1,210 @@
 {
-    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-	"adminUsername": {
-	    "type": "string"
-	},
-	"adminPassword": {
-	    "type": "securestring"
-	},
-	"storageAccountName": {
-	    "type": "string"
-	},
-	"storageAccountSasToken": {
-	    "type": "securestring"
-	}
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string"
     },
-    "resources": [
-	{
-	    "type": "Microsoft.Network/virtualNetworks",
-	    "name": "myVnet",
-	    "location": "[resourceGroup().location]",
-	    "apiVersion": "2016-12-01",
-	    "properties": {
-		"addressSpace": {
-		    "addressPrefixes": [
-			"10.0.0.0/16"
-		    ]
-		},
-		"subnets": [
-		    {
-			"name": "mySubnet",
-			"properties": {
-			    "addressPrefix": "10.0.0.0/16"
-			}
-		    }
-		]
-	    }
-	},
-	{
-	    "type": "Microsoft.Compute/virtualMachineScaleSets",
-	    "name": "myScaleSet",
-	    "location": "[resourceGroup().location]",
-	    "apiVersion": "2016-04-30-preview",
-	    "dependsOn": [
-		"Microsoft.Network/virtualNetworks/myVnet"
-	    ],
-	    "sku": {
-		"name": "Standard_A1",
-		"capacity": 2
-	    },
-	    "properties": {
-		"upgradePolicy": {
-		    "mode": "Manual"
-		},
-		"virtualMachineProfile": {
-		    "storageProfile": {
-			"imageReference": {
-			    "publisher": "Canonical",
-			    "offer": "UbuntuServer",
-			    "sku": "16.04-LTS",
-			    "version": "latest"
-			}
-		    },
-		    "osProfile": {
-			"computerNamePrefix": "vm",
-			"adminUsername": "[parameters('adminUsername')]",
-			"adminPassword": "[parameters('adminPassword')]"
-		    },
-		    "networkProfile": {
-			"networkInterfaceConfigurations": [
-			    {
-				"name": "myNic",
-				"properties": {
-				    "primary": "true",
-				    "ipConfigurations": [
-					{
-					    "name": "myIpConfig",
-					    "properties": {
-						"subnet": {
-						    "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
-						}
-					    }
-					}
-				    ]
-				}
-			    }
-			]
-		    },
-		    "extensionProfile": {
-			"extensions": [
-			    {
-				"name": "LinuxDiagnosticExtension",
-				"properties": {
-				    "publisher": "Microsoft.Azure.Diagnostics",
-				    "type": "LinuxDiagnostic",
-				    "typeHandlerVersion": "3.0",
-				    "settings": {
-					"StorageAccount": "[parameters('storageAccountName')]",
-					"ladCfg": {
-					    "diagnosticMonitorConfiguration": {
-						"performanceCounters": {
-						    "sinks": "WADMetricJsonBlob",
-						    "performanceCounterConfiguration": [
-							{
-							    "unit": "Percent",
-							    "type": "builtin",
-							    "counter": "PercentProcessorTime",
-							    "counterSpecifier": "/builtin/Processor/PercentProcessorTime",
-							    "condition": "IsAggregate=TRUE",
-							    "class": "Processor"
-							}
-						    ]
-						},
-						"metrics": {
-						    "metricAggregation": [
-							{
-							    "scheduledTransferPeriod": "PT1M"
-							}
-						    ],
-						    "resourceId": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]"
-						}
-					    }
-					}
-				    },
-				    "protectedSettings": {
-					"storageAccountName": "[parameters('storageAccountName')]",
-					"storageAccountSasToken": "[parameters('storageAccountSasToken')]",
-					"sinksConfig": {
-					    "sink": [
-						{
-						    "name": "WADMetricJsonBlob",
-						    "type": "JsonBlob"
-						}
-					    ]
-					}
-				    }
-				}
-			    }
-			]
-		    }
-		}
-	    }
-	},
-	{
-	    "type": "Microsoft.Insights/autoscaleSettings",
-	    "apiVersion": "2015-04-01",
-	    "name": "guestMetricsAutoscale",
-	    "location": "[resourceGroup().location]",
-	    "dependsOn": [
-		"Microsoft.Compute/virtualMachineScaleSets/myScaleSet"
-	    ],
-	    "properties": {
-		"name": "guestMetricsAutoscale",
-		"targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-		"enabled": true,
-		"profiles": [
-		    {
-			"name": "Profile1",
-			"capacity": {
-			    "minimum": "1",
-			    "maximum": "10",
-			    "default": "3"
-			},
-			"rules": [
-			    {
-				"metricTrigger": {
-				    "metricName": "/builtin/Processor/PercentProcessorTime",
-				    "metricNamespace": "",
-				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-				    "timeGrain": "PT1M",
-				    "statistic": "Average",
-				    "timeWindow": "PT5M",
-				    "timeAggregation": "Average",
-				    "operator": "GreaterThan",
-				    "threshold": 60
-				},
-				"scaleAction": {
-				    "direction": "Increase",
-				    "type": "ChangeCount",
-				    "value": "1",
-				    "cooldown": "PT1M"
-				}
-			    },
-			    {
-				"metricTrigger": {
-				    "metricName": "/builtin/Processor/PercentProcessorTime",
-				    "metricNamespace": "",
-				    "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
-				    "timeGrain": "PT1M",
-				    "statistic": "Average",
-				    "timeWindow": "PT5M",
-				    "timeAggregation": "Average",
-				    "operator": "LessThan",
-				    "threshold": 30
-				},
-				"scaleAction": {
-				    "direction": "Decrease",
-				    "type": "ChangeCount",
-				    "value": "1",
-				    "cooldown": "PT1M"
-				}
-			    }
-			]
-		    }
-		]
-	    }
-	}
-    ]
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "storageAccountName": {
+      "type": "string"
+    },
+    "storageAccountSasToken": {
+      "type": "securestring"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "myVnet",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-12-01",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "mySubnet",
+            "properties": {
+              "addressPrefix": "10.0.0.0/16"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "myScaleSet",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "Microsoft.Network/virtualNetworks/myVnet"
+      ],
+      "sku": {
+        "name": "Standard_A1",
+        "capacity": 2
+      },
+      "properties": {
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "Canonical",
+              "offer": "UbuntuServer",
+              "sku": "16.04-LTS",
+              "version": "latest"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "vm",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "myNic",
+                "properties": {
+                  "primary": "true",
+                  "ipConfigurations": [
+                    {
+                      "name": "myIpConfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "LinuxDiagnosticExtension",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "type": "LinuxDiagnostic",
+                  "typeHandlerVersion": "3.0",
+                  "settings": {
+                    "StorageAccount": "[parameters('storageAccountName')]",
+                    "ladCfg": {
+                      "diagnosticMonitorConfiguration": {
+                        "performanceCounters": {
+                          "sinks": "WADMetricJsonBlob",
+                          "performanceCounterConfiguration": [
+                            {
+                              "unit": "Percent",
+                              "type": "builtin",
+                              "counter": "PercentProcessorTime",
+                              "counterSpecifier": "/builtin/Processor/PercentProcessorTime",
+                              "condition": "IsAggregate=TRUE",
+                              "class": "Processor"
+                            }
+                          ]
+                        },
+                        "metrics": {
+                          "metricAggregation": [
+                            {
+                              "scheduledTransferPeriod": "PT1M"
+                            }
+                          ],
+                          "resourceId": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]"
+                        }
+                      }
+                    }
+                  },
+                  "protectedSettings": {
+                    "storageAccountName": "[parameters('storageAccountName')]",
+                    "storageAccountSasToken": "[parameters('storageAccountSasToken')]",
+                    "sinksConfig": {
+                      "sink": [
+                        {
+                          "name": "WADMetricJsonBlob",
+                          "type": "JsonBlob"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/autoscaleSettings",
+      "apiVersion": "2015-04-01",
+      "name": "guestMetricsAutoscale",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Compute/virtualMachineScaleSets/myScaleSet"
+      ],
+      "properties": {
+        "name": "guestMetricsAutoscale",
+        "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
+        "enabled": true,
+        "profiles": [
+          {
+            "name": "Profile1",
+            "capacity": {
+              "minimum": "1",
+              "maximum": "10",
+              "default": "3"
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "/builtin/Processor/PercentProcessorTime",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT5M",
+                  "timeAggregation": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": 60
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT1M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "/builtin/Processor/PercentProcessorTime",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT5M",
+                  "timeAggregation": "Average",
+                  "operator": "LessThan",
+                  "threshold": 30
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT1M"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
