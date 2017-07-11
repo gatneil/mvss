@@ -95,10 +95,8 @@
 				    "publisher": "Microsoft.Azure.Diagnostics",
 				    "type": "LinuxDiagnostic",
 				    "typeHandlerVersion": "3.0",
-				    "autoUpgradeMinorVersion": true,
 				    "settings": {
 					"StorageAccount": "[parameters('storageAccountName')]",
-					"sampleRateInSeconds": 15,
 					"ladCfg": {
 					    "diagnosticMonitorConfiguration": {
 						"performanceCounters": {
@@ -123,15 +121,11 @@
 						"metrics": {
 						    "metricAggregation": [
 							{
-							    "scheduledTransferPeriod": "PT1H"
-							},
-							{
 							    "scheduledTransferPeriod": "PT1M"
 							}
 						    ],
 						    "resourceId": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]"
-						},
-						"eventVolume": "Large"
+						}
 					    }
 					}
 				    },
