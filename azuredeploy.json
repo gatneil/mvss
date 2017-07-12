@@ -103,12 +103,12 @@
                           "sinks": "WADMetricJsonBlob",
                           "performanceCounterConfiguration": [
                             {
-                              "unit": "Percent",
+                              "unit": "percent",
                               "type": "builtin",
-                              "counter": "PercentProcessorTime",
-                              "counterSpecifier": "/builtin/Processor/PercentProcessorTime",
-                              "condition": "IsAggregate=TRUE",
-                              "class": "Processor"
+                              "class": "memory",
+                              "counter": "percentUsedMemory",
+                              "counterSpecifier": "/builtin/memory/percentUsedMemory",
+                              "condition": "IsAggregate=TRUE"
                             }
                           ]
                         },
@@ -165,7 +165,7 @@
             "rules": [
               {
                 "metricTrigger": {
-                  "metricName": "/builtin/Processor/PercentProcessorTime",
+                  "metricName": "/builtin/memory/percentUsedMemory",
                   "metricNamespace": "",
                   "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
                   "timeGrain": "PT1M",
@@ -184,7 +184,7 @@
               },
               {
                 "metricTrigger": {
-                  "metricName": "/builtin/Processor/PercentProcessorTime",
+                  "metricName": "/builtin/memory/percentUsedMemory",
                   "metricNamespace": "",
                   "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', 'myScaleSet')]",
                   "timeGrain": "PT1M",
