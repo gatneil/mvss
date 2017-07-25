@@ -7,17 +7,12 @@
     },
     "adminPassword": {
       "type": "securestring"
+    },
+    "sourceImageVhdUri": {
+      "type": "string"
     }
   },
-  "variables": {
-    "uniqueStringArray": [
-      "[concat(uniqueString(concat(resourceGroup().id, 'sa0')))]",
-      "[concat(uniqueString(concat(resourceGroup().id, 'sa1')))]",
-      "[concat(uniqueString(concat(resourceGroup().id, 'sa2')))]",
-      "[concat(uniqueString(concat(resourceGroup().id, 'sa3')))]",
-      "[concat(uniqueString(concat(resourceGroup().id, 'sa4')))]"
-    ]
-  },
+  "variables": {},
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
@@ -41,27 +36,11 @@
       }
     },
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('uniqueStringArray')[copyIndex()]]",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2017-06-01",
-      "copy": {
-        "name": "storageLoop",
-        "count": 5
-      },
-      "properties": {},
-      "kind": "Storage",
-      "sku": {
-        "name": "Standard_LRS"
-      }
-    },
-    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "myScaleSet",
       "location": "[resourceGroup().location]",
       "apiVersion": "2017-03-30",
       "dependsOn": [
-        "storageLoop",
         "Microsoft.Network/virtualNetworks/myVnet"
       ],
       "sku": {
@@ -75,22 +54,13 @@
         "virtualMachineProfile": {
           "storageProfile": {
             "osDisk": {
-              "vhdContainers": [
-                "[concat('https://', variables('uniqueStringArray')[0], '.blob.core.windows.net/vhds')]",
-                "[concat('https://', variables('uniqueStringArray')[1], '.blob.core.windows.net/vhds')]",
-                "[concat('https://', variables('uniqueStringArray')[2], '.blob.core.windows.net/vhds')]",
-                "[concat('https://', variables('uniqueStringArray')[3], '.blob.core.windows.net/vhds')]",
-                "[concat('https://', variables('uniqueStringArray')[4], '.blob.core.windows.net/vhds')]"
-              ],
               "name": "osdisk",
               "caching": "ReadWrite",
-              "createOption": "FromImage"
-            },
-            "imageReference": {
-              "publisher": "Canonical",
-              "offer": "UbuntuServer",
-              "sku": "16.04-LTS",
-              "version": "latest"
+              "createOption": "FromImage",
+              "osType": "Linux",
+              "image": {
+                "uri": "[parameters('sourceImageVhdUri')]"
+              }
             }
           },
           "osProfile": {
