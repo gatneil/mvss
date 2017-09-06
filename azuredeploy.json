@@ -44,6 +44,7 @@
         "name": "Standard_A1",
         "capacity": 2
       },
+      "zones": [],
       "properties": {
         "upgradePolicy": {
           "mode": "Manual"
