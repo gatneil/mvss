@@ -46,7 +46,7 @@
       },
       "zones": [],
       "properties": {
-        "singlePlacementGroup": true,
+        "singlePlacementGroup": false,
         "upgradePolicy": {
           "mode": "Manual"
         },
