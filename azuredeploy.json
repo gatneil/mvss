@@ -44,7 +44,7 @@
         "name": "Standard_A1",
         "capacity": 2
       },
-      "zones": [],
+      "zones": ["1"],
       "properties": {
         "singlePlacementGroup": true,
         "upgradePolicy": {
