@@ -41,7 +41,7 @@
         "Microsoft.Network/virtualNetworks/myVnet"
       ],
       "sku": {
-        "name": "Standard_A1",
+        "name": "Standard_F1",
         "capacity": 2
       },
       "zones": ["1"],
