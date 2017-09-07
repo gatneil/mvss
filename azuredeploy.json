@@ -33,11 +33,89 @@
       }
     },
     {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "lbPip",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "myLb",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "dependsOn": [
+        "Microsoft.Network/publicIPAddresses/lbPip"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "lbFrontEnd",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'lbPip')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "lbBackendPool"
+          }
+        ],
+        "inboundNatPools": [
+          {
+            "name": "lbNatPool",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/frontendIPConfigurations/lbFrontEnd')]"
+              },
+              "protocol": "tcp",
+              "frontendPortRangeStart": 50000,
+              "frontendPortRangeEnd": 50119,
+              "backendPort": 22
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "httpRule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/frontendIPConfigurations/lbFrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/backendAddressPools/lbBackendPool')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'myLb'), '/probes/httpProbe')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "httpProbe",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 80
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "myScaleSet",
       "location": "[resourceGroup().location]",
       "apiVersion": "2017-03-30",
       "dependsOn": [
+        "Microsoft.Network/loadBalancers/myLb",
         "Microsoft.Network/virtualNetworks/myVnet"
       ],
       "sku": {
@@ -76,7 +154,17 @@
                       "properties": {
                         "subnet": {
                           "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'myVnet'), '/subnets/mySubnet')]"
-                        }
+                        },
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers/', 'myLb'), '/backendAddressPools/lbBackendPool')]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers/', 'myLb'), '/inboundNatPools/lbNatPool')]"
+                          }
+                        ]
                       }
                     }
                   ]
