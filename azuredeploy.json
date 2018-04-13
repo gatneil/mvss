@@ -36,7 +36,7 @@
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "myScaleSet",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2016-04-30-preview",
+      "apiVersion": "2017-12-01",
       "dependsOn": [
         "Microsoft.Network/virtualNetworks/myVnet"
       ],
@@ -46,7 +46,7 @@
       },
       "properties": {
         "upgradePolicy": {
-          "mode": "Manual"
+          "mode": "Automatic"
         },
         "virtualMachineProfile": {
           "storageProfile": {
@@ -82,6 +82,25 @@
               }
             ]
           }
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+      "name": "myScaleSet/myCustomScriptExtension",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Compute/virtualMachineScaleSets/myScaleSet"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [],
+          "commandToExecute": "echo 'hi'"
         }
       }
     }
